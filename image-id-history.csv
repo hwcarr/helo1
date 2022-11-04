@@ -1,0 +1,64 @@
+IMAGE, CREATED BY
+sha256:b7a0ffea167e62df1165f1868ff6ca5ddb1c13677c69928976a71a3ffa10bcde, HEALTHCHECK &{["CMD-SHELL" "/healthcheck.sh"] "0s" "0s" "0s" '\x00'}
+<missing>, CMD ["/usr/bin/supervisord" "-c" "/supervisord.conf"]
+<missing>, ENTRYPOINT ["start.sh"]
+<missing>, USER root
+<missing>, RUN /bin/sh -c chmod +x /usr/bin/start.sh;     chmod +x /cron.sh;     chmod +x /session-deduplicator.sh;     chmod +x /backup-time-file-watcher.sh;     chmod +x /daily-backup.sh;     chmod a+r /Caddyfile;     chmod +x /healthcheck.sh # buildkit
+<missing>, COPY healthcheck.sh / # buildkit
+<missing>, COPY supervisord.conf / # buildkit
+<missing>, COPY daily-backup.sh / # buildkit
+<missing>, COPY cron.sh / # buildkit
+<missing>, COPY session-deduplicator.sh / # buildkit
+<missing>, COPY backup-time-file-watcher.sh / # buildkit
+<missing>, COPY start.sh /usr/bin/ # buildkit
+<missing>, COPY Caddyfile / # buildkit
+<missing>, RUN /bin/sh -c mkdir /var/log/supervisord;     mkdir /var/run/supervisord; # buildkit
+<missing>, RUN /bin/sh -c set -ex;     a2dissite 000-default &&     a2dissite default-ssl &&     rm -f /etc/apache2/sites-enabled/000-default.conf &&     rm -f /etc/apache2/sites-enabled/default-ssl.conf &&     rm /etc/apache2/sites-available/000-default.conf &&     rm /etc/apache2/sites-available/default-ssl.conf &&     a2ensite mastercontainer.conf # buildkit
+<missing>, RUN /bin/sh -c rm /etc/apache2/ports.conf;     sed -s -i -e "s/Include ports.conf//" /etc/apache2/apache2.conf;     sed -i "/^Listen /d" /etc/apache2/apache2.conf # buildkit
+<missing>, RUN /bin/sh -c a2enmod rewrite     headers     env     mime     dir     authz_core     proxy     proxy_http     ssl # buildkit
+<missing>, COPY mastercontainer.conf /etc/apache2/sites-available/ # buildkit
+<missing>, RUN /bin/sh -c mkdir -p /etc/apache2/certs &&     cd /etc/apache2/certs &&     openssl req -new -newkey rsa:4096 -days 3650 -nodes -x509 -subj "/C=DE/ST=BE/L=Local/O=Dev/CN=nextcloud.local" -keyout ./ssl.key -out ./ssl.crt; # buildkit
+<missing>, RUN /bin/sh -c set -e &&     curl -sS https://getcomposer.org/installer | php &&     mv composer.phar /usr/local/bin/composer &&     chmod +x /usr/local/bin/composer &&     cd /var/www/docker-aio;     git clone https://github.com/nextcloud-releases/all-in-one.git --depth 1 .;     cd php;     composer install --no-dev;     composer clearcache;     cd ..;     rm -f /usr/local/bin/composer;     chmod 770 -R ./;     chown www-data:www-data -R /var/www;     rm -r ./php/data;     rm -r ./php/session # buildkit
+<missing>, RUN /bin/sh -c set -ex;     pecl install APCu-5.1.22;     docker-php-ext-enable apcu # buildkit
+<missing>, RUN /bin/sh -c chmod +x /usr/local/bin/docker # buildkit
+<missing>, COPY /usr/local/bin/docker /usr/local/bin/ # buildkit
+<missing>, RUN /bin/sh -c chmod +x /usr/bin/caddy # buildkit
+<missing>, COPY /usr/bin/caddy /usr/bin/ # buildkit
+<missing>, RUN /bin/sh -c apt-get update;     apt-get install -y --no-install-recommends         git         supervisor         openssl         sudo         dpkg-dev         netcat     ;     rm -rf /var/lib/apt/lists/* # buildkit
+<missing>, WORKDIR /var/www/docker-aio
+<missing>, RUN /bin/sh -c mkdir -p /var/www/docker-aio; # buildkit
+<missing>, VOLUME [/mnt/docker-aio-config/]
+<missing>, RUN /bin/sh -c mkdir -p /mnt/docker-aio-config/; # buildkit
+<missing>, EXPOSE map[8443/tcp:{}]
+<missing>, EXPOSE map[8080/tcp:{}]
+<missing>, EXPOSE map[80/tcp:{}]
+<missing>, /bin/sh -c #(nop)  CMD ["apache2-foreground"]
+<missing>, /bin/sh -c #(nop)  EXPOSE 80
+<missing>, /bin/sh -c #(nop) WORKDIR /var/www/html
+<missing>, /bin/sh -c #(nop) COPY file:e3123fcb6566efa979f945bfac1c94c854a559d7b82723e42118882a8ac4de66 in /usr/local/bin/ 
+<missing>, /bin/sh -c #(nop)  STOPSIGNAL SIGWINCH
+<missing>, /bin/sh -c #(nop)  ENTRYPOINT ["docker-php-entrypoint"]
+<missing>, /bin/sh -c docker-php-ext-enable sodium
+<missing>, /bin/sh -c #(nop) COPY multi:e11221d43af7136e4dbad5a74e659bcfa753214a9e615c3daf357f1633d9d3d1 in /usr/local/bin/ 
+<missing>, /bin/sh -c set -eux;   savedAptMark="$(apt-mark showmanual)";  apt-get update;  apt-get install -y --no-install-recommends   apache2-dev   libargon2-dev   libcurl4-openssl-dev   libonig-dev   libreadline-dev   libsodium-dev   libsqlite3-dev   libssl-dev   libxml2-dev   zlib1g-dev  ;   export   CFLAGS="$PHP_CFLAGS"   CPPFLAGS="$PHP_CPPFLAGS"   LDFLAGS="$PHP_LDFLAGS"  ;  docker-php-source extract;  cd /usr/src/php;  gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)";  debMultiarch="$(dpkg-architecture --query DEB_BUILD_MULTIARCH)";  if [ ! -d /usr/include/curl ]; then   ln -sT "/usr/include/$debMultiarch/curl" /usr/local/include/curl;  fi;  ./configure   --build="$gnuArch"   --with-config-file-path="$PHP_INI_DIR"   --with-config-file-scan-dir="$PHP_INI_DIR/conf.d"     --enable-option-checking=fatal     --with-mhash     --with-pic     --enable-ftp   --enable-mbstring   --enable-mysqlnd   --with-password-argon2   --with-sodium=shared   --with-pdo-sqlite=/usr   --with-sqlite3=/usr     --with-curl   --with-iconv   --with-openssl   --with-readline   --with-zlib     --disable-phpdbg     --with-pear     $(test "$gnuArch" = 's390x-linux-gnu' && echo '--without-pcre-jit')   --with-libdir="lib/$debMultiarch"     --disable-cgi     --with-apxs2  ;  make -j "$(nproc)";  find -type f -name '*.a' -delete;  make install;  find   /usr/local   -type f   -perm '/0111'   -exec sh -euxc '    strip --strip-all "$@" || :   ' -- '{}' +  ;  make clean;   cp -v php.ini-* "$PHP_INI_DIR/";   cd /;  docker-php-source delete;   apt-mark auto '.*' > /dev/null;  [ -z "$savedAptMark" ] || apt-mark manual $savedAptMark;  find /usr/local -type f -executable -exec ldd '{}' ';'   | awk '/=>/ { print $(NF-1) }'   | sort -u   | xargs -r dpkg-query --search   | cut -d: -f1   | sort -u   | xargs -r apt-mark manual  ;  apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false;  rm -rf /var/lib/apt/lists/*;   pecl update-channels;  rm -rf /tmp/pear ~/.pearrc;   php --version
+<missing>, /bin/sh -c #(nop) COPY file:ce57c04b70896f77cc11eb2766417d8a1240fcffe5bba92179ec78c458844110 in /usr/local/bin/ 
+<missing>, /bin/sh -c set -eux;   savedAptMark="$(apt-mark showmanual)";  apt-get update;  apt-get install -y --no-install-recommends gnupg dirmngr;  rm -rf /var/lib/apt/lists/*;   mkdir -p /usr/src;  cd /usr/src;   curl -fsSL -o php.tar.xz "$PHP_URL";   if [ -n "$PHP_SHA256" ]; then   echo "$PHP_SHA256 *php.tar.xz" | sha256sum -c -;  fi;   if [ -n "$PHP_ASC_URL" ]; then   curl -fsSL -o php.tar.xz.asc "$PHP_ASC_URL";   export GNUPGHOME="$(mktemp -d)";   for key in $GPG_KEYS; do    gpg --batch --keyserver keyserver.ubuntu.com --recv-keys "$key";   done;   gpg --batch --verify php.tar.xz.asc php.tar.xz;   gpgconf --kill all;   rm -rf "$GNUPGHOME";  fi;   apt-mark auto '.*' > /dev/null;  apt-mark manual $savedAptMark > /dev/null;  apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false
+<missing>, /bin/sh -c #(nop)  ENV PHP_SHA256=a291b71d0498707fc5514eb5b9513e88f0f1d4890bcdefd67282ded8a2bfb941
+<missing>, /bin/sh -c #(nop)  ENV PHP_URL=https://www.php.net/distributions/php-8.0.25.tar.xz PHP_ASC_URL=https://www.php.net/distributions/php-8.0.25.tar.xz.asc
+<missing>, /bin/sh -c #(nop)  ENV PHP_VERSION=8.0.25
+<missing>, /bin/sh -c #(nop)  ENV GPG_KEYS=1729F83938DA44E27BA0F4D3DBDB397470D12172 BFDDD28642824F8118EF77909B67A5C12229118F 2C16C765DBE54A088130F1BC4B9B5F600B55F3B4
+<missing>, /bin/sh -c #(nop)  ENV PHP_LDFLAGS=-Wl,-O1 -pie
+<missing>, /bin/sh -c #(nop)  ENV PHP_CPPFLAGS=-fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64
+<missing>, /bin/sh -c #(nop)  ENV PHP_CFLAGS=-fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64
+<missing>, /bin/sh -c {   echo '<FilesMatch \.php$>';   echo '\tSetHandler application/x-httpd-php';   echo '</FilesMatch>';   echo;   echo 'DirectoryIndex disabled';   echo 'DirectoryIndex index.php index.html';   echo;   echo '<Directory /var/www/>';   echo '\tOptions -Indexes';   echo '\tAllowOverride All';   echo '</Directory>';  } | tee "$APACHE_CONFDIR/conf-available/docker-php.conf"  && a2enconf docker-php
+<missing>, /bin/sh -c a2dismod mpm_event && a2enmod mpm_prefork
+<missing>, /bin/sh -c set -eux;  apt-get update;  apt-get install -y --no-install-recommends apache2;  rm -rf /var/lib/apt/lists/*;   sed -ri 's/^export ([^=]+)=(.*)$/: ${\1:=\2}\nexport \1/' "$APACHE_ENVVARS";   . "$APACHE_ENVVARS";  for dir in   "$APACHE_LOCK_DIR"   "$APACHE_RUN_DIR"   "$APACHE_LOG_DIR"  ; do   rm -rvf "$dir";   mkdir -p "$dir";   chown "$APACHE_RUN_USER:$APACHE_RUN_GROUP" "$dir";   chmod 777 "$dir";  done;   rm -rvf /var/www/html/*;   ln -sfT /dev/stderr "$APACHE_LOG_DIR/error.log";  ln -sfT /dev/stdout "$APACHE_LOG_DIR/access.log";  ln -sfT /dev/stdout "$APACHE_LOG_DIR/other_vhosts_access.log";  chown -R --no-dereference "$APACHE_RUN_USER:$APACHE_RUN_GROUP" "$APACHE_LOG_DIR"
+<missing>, /bin/sh -c #(nop)  ENV APACHE_ENVVARS=/etc/apache2/envvars
+<missing>, /bin/sh -c #(nop)  ENV APACHE_CONFDIR=/etc/apache2
+<missing>, /bin/sh -c set -eux;  mkdir -p "$PHP_INI_DIR/conf.d";  [ ! -d /var/www/html ];  mkdir -p /var/www/html;  chown www-data:www-data /var/www/html;  chmod 777 /var/www/html
+<missing>, /bin/sh -c #(nop)  ENV PHP_INI_DIR=/usr/local/etc/php
+<missing>, /bin/sh -c set -eux;  apt-get update;  apt-get install -y --no-install-recommends   $PHPIZE_DEPS   ca-certificates   curl   xz-utils  ;  rm -rf /var/lib/apt/lists/*
+<missing>, /bin/sh -c #(nop)  ENV PHPIZE_DEPS=autoconf   dpkg-dev   file   g++   gcc   libc-dev   make   pkg-config   re2c
+<missing>, /bin/sh -c set -eux;  {   echo 'Package: php*';   echo 'Pin: release *';   echo 'Pin-Priority: -1';  } > /etc/apt/preferences.d/no-debian-php
+<missing>, /bin/sh -c #(nop)  CMD ["bash"]
+<missing>, /bin/sh -c #(nop) ADD file:8644a8156a07a656a35c41e2b2a458befb660309f8592e3efd5b43d46156cec2 in / 
